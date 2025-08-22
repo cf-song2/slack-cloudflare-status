@@ -9,19 +9,41 @@ import { ENDPOINTS, CACHE_TTL, ICN_KEYWORDS } from '../config/constants';
  */
 export async function fetchICNComponentsStatus() {
   try {
-    const response = await fetch(ENDPOINTS.components, {
+    // Fetch components data
+    const componentsResponse = await fetch(ENDPOINTS.components, {
       cf: {
         cacheTtl: CACHE_TTL,
         cacheEverything: true,
       },
     });
     
-    if (!response.ok) {
-      throw new Error(`Failed to fetch components data: ${response.status} ${response.statusText}`);
+    if (!componentsResponse.ok) {
+      throw new Error(`Failed to fetch components data: ${componentsResponse.status} ${componentsResponse.statusText}`);
     }
     
-    const data = await response.json();
-    return filterForICN(data);
+    // Fetch status data to get overall status
+    const statusResponse = await fetch(`${API_BASE_URL}/status.json`, {
+      cf: {
+        cacheTtl: CACHE_TTL,
+        cacheEverything: true,
+      },
+    });
+    
+    if (!statusResponse.ok) {
+      throw new Error(`Failed to fetch status data: ${statusResponse.status} ${statusResponse.statusText}`);
+    }
+    
+    // Parse both responses
+    const componentsData = await componentsResponse.json();
+    const statusData = await statusResponse.json();
+    
+    // Combine the data
+    const combinedData = {
+      ...statusData,
+      components: componentsData.components || [],
+    };
+    
+    return filterForICN(combinedData);
   } catch (error) {
     console.error('Error fetching ICN components status:', error);
     throw error;

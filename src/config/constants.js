@@ -5,7 +5,7 @@
 // API endpoints
 export const API_BASE_URL = 'https://www.cloudflarestatus.com/api/v2';
 export const ENDPOINTS = {
-  components: `${API_BASE_URL}/status.json`,
+  components: `${API_BASE_URL}/components.json`,
   incidents: `${API_BASE_URL}/incidents/unresolved.json`,
 };
 
