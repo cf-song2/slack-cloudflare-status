@@ -1,7 +1,7 @@
 /**
  * Cloudflare Status API client
  */
-import { ENDPOINTS, CACHE_TTL, ICN_KEYWORDS } from '../config/constants';
+import { API_BASE_URL, ENDPOINTS, CACHE_TTL, ICN_KEYWORDS } from '../config/constants';
 
 /**
  * Fetch ICN components status from Cloudflare Status API

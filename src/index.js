@@ -2,7 +2,7 @@
  * Cloudflare Status API Integration with Cron Jobs
  * 
  * This worker fetches data from the Cloudflare Status API:
- * - ICN (Seoul) components status every 6 hours
+ * - ICN (Seoul) components status every hour
  * - Unresolved incidents every hour
  * - Sends notifications to Slack
  */
@@ -52,6 +52,20 @@ export default {
         return new Response(JSON.stringify(data), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
+      } else if (path.endsWith('/check/all')) {
+        // Special endpoint to check both components and incidents
+        // Useful for testing after deployment
+        const componentsData = await checkICNComponents(env);
+        const incidentsData = await checkUnresolvedIncidents(env);
+        
+        return new Response(JSON.stringify({
+          status: 'success',
+          message: 'All checks completed and notifications sent',
+          components: componentsData,
+          incidents: incidentsData
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       } else {
         // Default response - status page
         return new Response(JSON.stringify({
@@ -81,19 +95,17 @@ export default {
   
   // Handle scheduled events
   async scheduled(event, env, ctx) {
-    // Check which cron trigger was fired based on the pattern
-    if (event.cron.includes('*/6')) {
-      // Every 6 hours - check ICN components status
-      await checkICNComponents(env);
-    } else {
-      // Every hour - check unresolved incidents
-      await checkUnresolvedIncidents(env);
-    }
+    // Since both cron jobs run hourly, we need to handle both checks
+    // Check ICN components status
+    await checkICNComponents(env);
+    
+    // Check unresolved incidents
+    await checkUnresolvedIncidents(env);
   },
 };
 
 /**
- * Check ICN components status and send notification if needed
+ * Check ICN components status and send notification
  * @param {Object} env - Worker environment
  * @returns {Promise<Object>} - Components status data
  */
@@ -107,10 +119,8 @@ async function checkICNComponents(env) {
       component => component.status !== 'operational'
     );
     
-    // Send notification to Slack if there are issues
-    if (hasIssues) {
-      await sendSlackNotification(env, componentsData, 'components');
-    }
+    // Always send notification to Slack, regardless of component status
+    await sendSlackNotification(env, componentsData, 'components');
     
     return {
       status: 'success',

@@ -14,8 +14,7 @@
 	// Cron triggers for scheduled tasks
 	"triggers": {
 		"crons": [
-			"0 */6 * * *", // Every 6 hours for ICN components check
-			"0 * * * *"     // Every hour for unresolved incidents check
+			"0 * * * *"  // Every hour for both ICN components and unresolved incidents checks
 		]
 	}
 }
